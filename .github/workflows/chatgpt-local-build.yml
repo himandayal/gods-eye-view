@@ -1,0 +1,43 @@
+name: ChatGPT local build bridge
+
+on:
+  push:
+    branches:
+      - chatgpt-build-upstream
+
+jobs:
+  build-latest-upstream:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout latest upstream main
+        uses: actions/checkout@v4
+        with:
+          repository: bilawalsidhu/gods-eye-view
+          ref: main
+          fetch-depth: 1
+
+      - name: Use Node 24.14
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24.14.0'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run setup doctor
+        run: npm run doctor
+
+      - name: Build
+        run: npm run build
+
+      - name: Record upstream commit
+        run: git rev-parse HEAD > dist/UPSTREAM_COMMIT.txt
+
+      - name: Upload built site
+        uses: actions/upload-artifact@v4
+        with:
+          name: gods-eye-view-dist
+          path: dist/
+          if-no-files-found: error
+          retention-days: 1
